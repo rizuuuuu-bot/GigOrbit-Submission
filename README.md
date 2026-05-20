@@ -6,7 +6,7 @@
 
 **GigOrbit** is an AI-driven, two-sided gig economy platform designed to seamlessly connect customers with verified home service professionals (Plumbers, Electricians, AC Technicians, etc.) using the power of Generative AI and Real-Time Websockets.
 
-![GigOrbit Banner](https://via.placeholder.com/1200x400.png?text=GigOrbit+-+AI+Powered+Service+Marketplace)
+![GigOrbit Banner](https://placehold.co/1200x400/1e3a8a/ffffff?text=GigOrbit+|+AI+Powered+Service+Marketplace)
 
 ## 🌟 The Problem We Solve
 Finding reliable, verified, and transparently priced home service workers in the informal sector is a nightmare. Customers face price gouging, while skilled workers struggle to find consistent jobs. GigOrbit eliminates the friction of manual searching, bargaining, and trust issues by letting an AI Agent handle the entire orchestration—from initial matchmaking to final booking.

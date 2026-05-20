@@ -20,30 +20,40 @@ app.use(express.static(path.join(__dirname, '../frontend')));
 // Serve mock data
 app.use('/mock_data', express.static(path.join(__dirname, '../mock_data')));
 
-// Crash-Proof AI Initialization
+// Ultimate Auto-Detect AI Initialization
 let ai = null;
 try {
-  let finalProjectId = process.env.PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT;
+  let project = process.env.PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT;
+  let apiKey = process.env.GEMINI_API_KEY;
   
-  if (fs.existsSync('/etc/secrets/credentials.json')) {
-    process.env.GOOGLE_APPLICATION_CREDENTIALS = '/etc/secrets/credentials.json';
-    const creds = JSON.parse(fs.readFileSync('/etc/secrets/credentials.json', 'utf8'));
-    finalProjectId = creds.project_id;
-    console.log("✅ Render Secret File Found!");
-  } else if (fs.existsSync(path.join(__dirname, '../credentials.json'))) {
-    process.env.GOOGLE_APPLICATION_CREDENTIALS = path.join(__dirname, '../credentials.json');
-    const creds = JSON.parse(fs.readFileSync(path.join(__dirname, '../credentials.json'), 'utf8'));
-    finalProjectId = creds.project_id;
-    console.log("✅ Local Credentials File Found!");
-  } else {
-    console.error("❌ CRITICAL ERROR: credentials.json is completely MISSING on Render!");
+  const renderPath = '/etc/secrets/credentials.json';
+  const localPath = path.join(__dirname, '../credentials.json');
+  let activePath = null;
+
+  if (fs.existsSync(renderPath)) activePath = renderPath;
+  else if (fs.existsSync(localPath)) activePath = localPath;
+
+  if (activePath) {
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = activePath;
+    const creds = JSON.parse(fs.readFileSync(activePath, 'utf8'));
+    
+    // Auto-detect if it's a Service Account or a raw API Key
+    if (creds.project_id) project = creds.project_id;
+    if (creds.api_key || creds.apiKey) apiKey = creds.api_key || creds.apiKey;
+    
+    console.log(`✅ ${activePath === renderPath ? 'Render Secret' : 'Local'} File Found!`);
   }
 
-  if (finalProjectId) {
-    ai = new GoogleGenAI({ vertexai: { project: finalProjectId, location: 'us-central1' } });
-    console.log("✅ AI Successfully Initialized with Project:", finalProjectId);
+  // Initialize strictly based on what we found
+  if (apiKey) {
+    ai = new GoogleGenAI({ apiKey: String(apiKey).trim() });
+    console.log("✅ AI Initialized using API Key");
+  } else if (project && String(project).trim() !== "undefined") {
+    const cleanProject = String(project).trim();
+    ai = new GoogleGenAI({ vertexai: { project: cleanProject, location: 'us-central1' } });
+    console.log(`✅ AI Initialized using Vertex AI (Project: ${cleanProject})`);
   } else {
-    console.error("❌ CRITICAL ERROR: Project ID is empty!");
+    console.error("❌ CRITICAL ERROR: Neither valid Project ID nor API Key found in file!");
   }
 } catch (err) {
   console.error("❌ AI Initialization Failed:", err.message);

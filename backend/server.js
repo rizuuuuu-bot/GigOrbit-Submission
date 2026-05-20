@@ -20,32 +20,34 @@ app.use(express.static(path.join(__dirname, '../frontend')));
 // Serve mock data
 app.use('/mock_data', express.static(path.join(__dirname, '../mock_data')));
 
-// 100% Foolproof Auto-Detect Initialization
-let finalProjectId = process.env.PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT;
-
+// Crash-Proof AI Initialization
+let ai = null;
 try {
-  // Check if running on Render (Secret File)
+  let finalProjectId = process.env.PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT;
+  
   if (fs.existsSync('/etc/secrets/credentials.json')) {
     process.env.GOOGLE_APPLICATION_CREDENTIALS = '/etc/secrets/credentials.json';
     const creds = JSON.parse(fs.readFileSync('/etc/secrets/credentials.json', 'utf8'));
     finalProjectId = creds.project_id;
-  } 
-  // Check if running on Localhost
-  else if (fs.existsSync(path.join(__dirname, '../credentials.json'))) {
+    console.log("✅ Render Secret File Found!");
+  } else if (fs.existsSync(path.join(__dirname, '../credentials.json'))) {
     process.env.GOOGLE_APPLICATION_CREDENTIALS = path.join(__dirname, '../credentials.json');
     const creds = JSON.parse(fs.readFileSync(path.join(__dirname, '../credentials.json'), 'utf8'));
     finalProjectId = creds.project_id;
+    console.log("✅ Local Credentials File Found!");
+  } else {
+    console.error("❌ CRITICAL ERROR: credentials.json is completely MISSING on Render!");
+  }
+
+  if (finalProjectId) {
+    ai = new GoogleGenAI({ vertexai: { project: finalProjectId, location: 'us-central1' } });
+    console.log("✅ AI Successfully Initialized with Project:", finalProjectId);
+  } else {
+    console.error("❌ CRITICAL ERROR: Project ID is empty!");
   }
 } catch (err) {
-  console.error("Credentials file read error:", err);
+  console.error("❌ AI Initialization Failed:", err.message);
 }
-
-const ai = new GoogleGenAI({
-  vertexai: {
-    project: finalProjectId,
-    location: 'us-central1'
-  }
-});
 
 // Load workers and bookings data on boot
 let workersData = [];
@@ -98,8 +100,17 @@ app.post('/api/partner/register', (req, res) => {
     lat: lat ? parseFloat(lat) : 24.8607, // Default to Karachi if not provided
     lng: lng ? parseFloat(lng) : 67.0011
   };
-
+  
   workersData.push(newWorker);
+  
+  try {
+    fs.writeFileSync(path.join(__dirname, '../mock_data/workers.json'), JSON.stringify(workersData, null, 2));
+  } catch (err) {
+    console.error("Failed to save new partner to workers.json", err);
+  }
+
+  res.json({ success: true, message: "Partner registered successfully", worker: newWorker });
+});
   
   try {
     fs.writeFileSync(path.join(__dirname, '../mock_data/workers.json'), JSON.stringify(workersData, null, 2));

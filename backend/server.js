@@ -111,15 +111,6 @@ app.post('/api/partner/register', (req, res) => {
 
   res.json({ success: true, message: "Partner registered successfully", worker: newWorker });
 });
-  
-  try {
-    fs.writeFileSync(path.join(__dirname, '../mock_data/workers.json'), JSON.stringify(workersData, null, 2));
-  } catch (err) {
-    console.error("Failed to save new partner to workers.json", err);
-  }
-
-  res.json({ success: true, message: "Partner registered successfully", worker: newWorker });
-});
 
 app.post('/api/chat', async (req, res) => {
   const { message, user_id, user_name, manual_location_string, user_lat, user_lng, chat_history, locked_workers } = req.body;

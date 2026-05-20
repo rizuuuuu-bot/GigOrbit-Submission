@@ -20,10 +20,29 @@ app.use(express.static(path.join(__dirname, '../frontend')));
 // Serve mock data
 app.use('/mock_data', express.static(path.join(__dirname, '../mock_data')));
 
-// Initialize Google GenAI with Vertex AI properly
+// 100% Foolproof Auto-Detect Initialization
+let finalProjectId = process.env.PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT;
+
+try {
+  // Check if running on Render (Secret File)
+  if (fs.existsSync('/etc/secrets/credentials.json')) {
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = '/etc/secrets/credentials.json';
+    const creds = JSON.parse(fs.readFileSync('/etc/secrets/credentials.json', 'utf8'));
+    finalProjectId = creds.project_id;
+  } 
+  // Check if running on Localhost
+  else if (fs.existsSync(path.join(__dirname, '../credentials.json'))) {
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = path.join(__dirname, '../credentials.json');
+    const creds = JSON.parse(fs.readFileSync(path.join(__dirname, '../credentials.json'), 'utf8'));
+    finalProjectId = creds.project_id;
+  }
+} catch (err) {
+  console.error("Credentials file read error:", err);
+}
+
 const ai = new GoogleGenAI({
   vertexai: {
-    project: process.env.PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT,
+    project: finalProjectId,
     location: 'us-central1'
   }
 });

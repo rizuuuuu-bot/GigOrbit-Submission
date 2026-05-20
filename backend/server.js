@@ -23,7 +23,7 @@ app.use('/mock_data', express.static(path.join(__dirname, '../mock_data')));
 // Initialize Google GenAI with Vertex AI properly
 const ai = new GoogleGenAI({
   vertexai: {
-    project: process.env.GOOGLE_CLOUD_PROJECT,
+    project: process.env.PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT,
     location: 'us-central1'
   }
 });

@@ -20,28 +20,13 @@ app.use(express.static(path.join(__dirname, '../frontend')));
 // Serve mock data
 app.use('/mock_data', express.static(path.join(__dirname, '../mock_data')));
 
-// ---------------------------------------------------------
-// HACKATHON GOD MODE: Direct Initialization + Forced Path
-// ---------------------------------------------------------
-const fs = require('fs');
-
-// 1. Force SDK to ignore dummy file and use Render's Secret File explicitly
-if (fs.existsSync('/etc/secrets/credentials.json')) {
-  process.env.GOOGLE_APPLICATION_CREDENTIALS = '/etc/secrets/credentials.json';
-  console.log("✅ Using Real Secret File from Render!");
-} else {
-  console.log("⚠️ Render Secret File not found, SDK might read the dummy file!");
-}
-
-// 2. Hardcoded Project ID bypass
+// Initialize Google GenAI with Vertex AI properly
 const ai = new GoogleGenAI({
   vertexai: {
-    project: 'ai-orchestrator-app-496617', // Taken from your screenshot
+    project: process.env.GOOGLE_CLOUD_PROJECT,
     location: 'us-central1'
   }
 });
-console.log("✅ AI Initialized successfully with direct Project ID!");
-// ---------------------------------------------------------
 
 // Load workers and bookings data on boot
 let workersData = [];
@@ -94,7 +79,7 @@ app.post('/api/partner/register', (req, res) => {
     lat: lat ? parseFloat(lat) : 24.8607, // Default to Karachi if not provided
     lng: lng ? parseFloat(lng) : 67.0011
   };
-  
+
   workersData.push(newWorker);
   
   try {

@@ -32,26 +32,28 @@ Unlike standard prototypes, **GigOrbit is a fully dynamic, real-time engine.** E
 
 1. **Clone the repository:**
    ```bash
-   git clone [https://github.com/rizuuuuu-bot/GigOrbit-Hackathon-Submission.git](https://github.com/rizuuuuu-bot/GigOrbit-Hackathon-Submission.git)
-   cd GigOrbit-Hackathon-Submission
+   git clone https://github.com/rizuuuuu-bot/GigOrbit-Submission.git
+   cd GigOrbit-Submission
+   ```
 
-   cd GigOrbit-Hackathon-Submission
-Install Dependencies:
+2. **Install Dependencies:**
+   ```bash
+   npm install
+   ```
 
-Bash
-npm install
-Configure Authentication:
-GigOrbit uses Google Vertex AI. Place your credentials.json (Service Account Key) file in the root directory.
-Rename the provided .env.example file to .env and add your Google Cloud Project ID:
+3. **Configure Authentication:**
+   GigOrbit uses Google Vertex AI. Place your `credentials.json` (Service Account Key) file in the root directory. 
+   Rename the provided `.env.example` file to `.env` and add your Google Cloud Project ID:
+   ```env
+   GOOGLE_APPLICATION_CREDENTIALS="./credentials.json"
+   PROJECT_ID="your-google-cloud-project-id"
+   PORT=5000
+   ```
 
-Code snippet
-GOOGLE_APPLICATION_CREDENTIALS="./credentials.json"
-PROJECT_ID="your-google-cloud-project-id"
-PORT=5000
-Start the Real-Time Server:
+4. **Start the Real-Time Server:**
+   ```bash
+   npm start
+   ```
 
-Bash
-npm start
-Open the App:
-Navigate to http://localhost:5000 in your browser. For the best experience, open two separate windows (one as a Customer, one as a Partner) to experience the real-time Socket.IO synchronization.
-
+5. **Open the App:**
+   Navigate to `http://localhost:5000` in your browser. For the best experience, open two separate windows (one as a Customer, one as a Partner) to experience the real-time Socket.IO synchronization.

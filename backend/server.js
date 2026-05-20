@@ -20,37 +20,28 @@ app.use(express.static(path.join(__dirname, '../frontend')));
 // Serve mock data
 app.use('/mock_data', express.static(path.join(__dirname, '../mock_data')));
 
-// Truth-Serum AI Initialization
-let ai = null;
-try {
-  const renderPath = '/etc/secrets/credentials.json';
-  const localPath = path.join(__dirname, '../credentials.json');
-  const activePath = fs.existsSync(renderPath) ? renderPath : (fs.existsSync(localPath) ? localPath : null);
+// ---------------------------------------------------------
+// HACKATHON GOD MODE: Direct Initialization + Forced Path
+// ---------------------------------------------------------
+const fs = require('fs');
 
-  if (!activePath) {
-    console.error("❌ File not found anywhere!");
-  } else {
-    process.env.GOOGLE_APPLICATION_CREDENTIALS = activePath;
-    const creds = JSON.parse(fs.readFileSync(activePath, 'utf8'));
-    
-    // Yahan sach saamnay aayega
-    console.log("🔍 File loaded! File ke andar 'project_id' yeh hai:", creds.project_id);
-
-    if (creds.project_id) {
-      const pId = String(creds.project_id).trim();
-      ai = new GoogleGenAI({ vertexai: { project: pId, location: 'us-central1' } });
-      console.log("✅ AI SUCCESS with Vertex AI!");
-    } else if (creds.api_key || creds.apiKey) {
-      const key = String(creds.api_key || creds.apiKey).trim();
-      ai = new GoogleGenAI({ apiKey: key });
-      console.log("✅ AI SUCCESS with API Key!");
-    } else {
-      console.error("❌ BUSTED: File toh mili, lekin is mein 'project_id' ya 'api_key' mojood hi nahi hai! Tum ne Render mein ghalat JSON paste ki hai ya Dummy file daal di hai.");
-    }
-  }
-} catch (err) {
-  console.error("❌ SDK Error:", err.message);
+// 1. Force SDK to ignore dummy file and use Render's Secret File explicitly
+if (fs.existsSync('/etc/secrets/credentials.json')) {
+  process.env.GOOGLE_APPLICATION_CREDENTIALS = '/etc/secrets/credentials.json';
+  console.log("✅ Using Real Secret File from Render!");
+} else {
+  console.log("⚠️ Render Secret File not found, SDK might read the dummy file!");
 }
+
+// 2. Hardcoded Project ID bypass
+const ai = new GoogleGenAI({
+  vertexai: {
+    project: 'ai-orchestrator-app-496617', // Taken from your screenshot
+    location: 'us-central1'
+  }
+});
+console.log("✅ AI Initialized successfully with direct Project ID!");
+// ---------------------------------------------------------
 
 // Load workers and bookings data on boot
 let workersData = [];

@@ -20,43 +20,36 @@ app.use(express.static(path.join(__dirname, '../frontend')));
 // Serve mock data
 app.use('/mock_data', express.static(path.join(__dirname, '../mock_data')));
 
-// Ultimate Auto-Detect AI Initialization
+// Truth-Serum AI Initialization
 let ai = null;
 try {
-  let project = process.env.PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT;
-  let apiKey = process.env.GEMINI_API_KEY;
-  
   const renderPath = '/etc/secrets/credentials.json';
   const localPath = path.join(__dirname, '../credentials.json');
-  let activePath = null;
+  const activePath = fs.existsSync(renderPath) ? renderPath : (fs.existsSync(localPath) ? localPath : null);
 
-  if (fs.existsSync(renderPath)) activePath = renderPath;
-  else if (fs.existsSync(localPath)) activePath = localPath;
-
-  if (activePath) {
+  if (!activePath) {
+    console.error("❌ File not found anywhere!");
+  } else {
     process.env.GOOGLE_APPLICATION_CREDENTIALS = activePath;
     const creds = JSON.parse(fs.readFileSync(activePath, 'utf8'));
     
-    // Auto-detect if it's a Service Account or a raw API Key
-    if (creds.project_id) project = creds.project_id;
-    if (creds.api_key || creds.apiKey) apiKey = creds.api_key || creds.apiKey;
-    
-    console.log(`✅ ${activePath === renderPath ? 'Render Secret' : 'Local'} File Found!`);
-  }
+    // Yahan sach saamnay aayega
+    console.log("🔍 File loaded! File ke andar 'project_id' yeh hai:", creds.project_id);
 
-  // Initialize strictly based on what we found
-  if (apiKey) {
-    ai = new GoogleGenAI({ apiKey: String(apiKey).trim() });
-    console.log("✅ AI Initialized using API Key");
-  } else if (project && String(project).trim() !== "undefined") {
-    const cleanProject = String(project).trim();
-    ai = new GoogleGenAI({ vertexai: { project: cleanProject, location: 'us-central1' } });
-    console.log(`✅ AI Initialized using Vertex AI (Project: ${cleanProject})`);
-  } else {
-    console.error("❌ CRITICAL ERROR: Neither valid Project ID nor API Key found in file!");
+    if (creds.project_id) {
+      const pId = String(creds.project_id).trim();
+      ai = new GoogleGenAI({ vertexai: { project: pId, location: 'us-central1' } });
+      console.log("✅ AI SUCCESS with Vertex AI!");
+    } else if (creds.api_key || creds.apiKey) {
+      const key = String(creds.api_key || creds.apiKey).trim();
+      ai = new GoogleGenAI({ apiKey: key });
+      console.log("✅ AI SUCCESS with API Key!");
+    } else {
+      console.error("❌ BUSTED: File toh mili, lekin is mein 'project_id' ya 'api_key' mojood hi nahi hai! Tum ne Render mein ghalat JSON paste ki hai ya Dummy file daal di hai.");
+    }
   }
 } catch (err) {
-  console.error("❌ AI Initialization Failed:", err.message);
+  console.error("❌ SDK Error:", err.message);
 }
 
 // Load workers and bookings data on boot
